@@ -78,6 +78,7 @@ export class CodeChecker<TypeNames extends string> {
   }
 
   private extractTypesAsStrings() {
+    this._types.clear();
     const node = ts.createSourceFile(
       'extractTypes.ts', // fileName
       this.code, // sourceText

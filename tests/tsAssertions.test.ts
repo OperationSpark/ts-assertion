@@ -20,7 +20,7 @@ describe('ts-assertions', () => {
   });
 
   it('should instantiate a CodeChecker instance with a pathname', async () => {
-    const pathname = 'tests/fixtures/basicTypes.ts';
+    const pathname = 'tests/fixtures/fixtures1.ts';
     const code = await fs.readFile(pathname, 'utf-8');
 
     const checker = new CodeChecker<TypeNames>({ pathname });
@@ -32,7 +32,7 @@ describe('ts-assertions', () => {
   });
 
   it('should parse types when instantiated with a pathname', () => {
-    const pathname = 'tests/fixtures/basicTypes.ts';
+    const pathname = 'tests/fixtures/fixtures1.ts';
 
     const checker = new CodeChecker<TypeNames>({ pathname });
 
@@ -49,6 +49,20 @@ describe('ts-assertions', () => {
     types.forEach((value, key) => {
       expect(checker.types.get(key)).to.include(value);
     });
+  });
+
+  it('should parse types when pathname is updated', () => {
+    const initialPathname = 'tests/fixtures/fixtures1.ts';
+
+    const checker = new CodeChecker<TypeNames>({ pathname: initialPathname });
+
+    expect(checker.types.size).to.equal(5);
+
+    const updatedPathname = 'tests/fixtures/fixtures2.ts';
+
+    checker.pathname = updatedPathname;
+
+    expect(checker.types.size).to.equal(1);
   });
 
   it('should have access to default global types', () => {
@@ -147,17 +161,20 @@ describe('ts-assertions', () => {
       }
     ];
     types.forEach(({ type, validCode, invalidCode }) => {
-      it(`should test/assert code snippets with custom type '${type}'`, () => {
+      it(`should test code snippets with custom type '${type}'`, () => {
         expect(checker.test(validCode)).to.be.true;
         expect(checker.test(invalidCode)).to.be.false;
+      });
+      it(`should assert code snippets with custom type '${type}'`, () => {
         checker.assert(validCode).isValid();
         checker.assert(invalidCode).isNotValid();
       });
     });
   });
+
   describe('Code snippets with custom types', () => {
     const checker = new CodeChecker<TypeNames>({
-      pathname: 'tests/fixtures/basicTypes.ts',
+      pathname: 'tests/fixtures/fixtures1.ts',
       globalTypes: `type FILL_ME_IN = TypeError;`
     });
 
@@ -190,9 +207,11 @@ describe('ts-assertions', () => {
         }
       ];
     types.forEach(({ name, validCode, invalidCode }) => {
-      it(`should test/assert code snippets with custom type '${name}'`, () => {
+      it(`should test code snippets with custom type '${name}'`, () => {
         expect(checker.test(validCode, name)).to.be.true;
         expect(checker.test(invalidCode, name)).to.be.false;
+      });
+      it(`should assert code snippets with custom type '${name}'`, () => {
         checker.assert(validCode, name).isValid();
         checker.assert(invalidCode, name).isNotValid();
       });
