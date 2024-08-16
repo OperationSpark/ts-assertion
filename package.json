@@ -1,13 +1,13 @@
 {
   "name": "@operationspark.org/ts-assertion",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "main": "dist/index.js",
   "scripts": {
     "test": "mocha",
     "test:dev": "mocha --watch",
     "build": "tsup src/index.ts",
     "prepublish": "npm test && npm run build",
-    "publish": "npm publish --access public"
+    "publish:npm": "npm publish --access public"
   },
   "keywords": [
     "typescript",

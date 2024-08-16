@@ -1,6 +1,5 @@
 import assert from 'assert';
 import fsSync from 'fs';
-import path from 'path';
 import ts from 'typescript';
 
 type LibVersions =
@@ -18,23 +17,35 @@ type LibVersions =
   | 'es2015'
   | 'dom';
 
-type CompilationResult = {
-  code?: string;
-  diagnostics: ts.Diagnostic[];
-};
-
 type CodeCheckerOptions = {
   /** Pathname to input file */
   pathname?: string;
+  /**
+   * Global types to include during instantiation
+   * ```ts
+   * options.globalPaths = ['path/to/global.d.ts', ...]
+   * ```
+   */
+  globalPaths?: string[];
   /**
    * Global types to include
    *
    * @example
    * ```ts
-   * type GLOBAL_ACCESS = TypeError;
+   * `type GLOBAL_ACCESS = TypeError;`
    * ```
    */
   globalTypes?: string;
+};
+
+type Config = {
+  defaultGlobalPaths: string[];
+  verbose: boolean;
+};
+
+const config: Config = {
+  defaultGlobalPaths: [],
+  verbose: false
 };
 
 /**
@@ -71,14 +82,18 @@ type CodeCheckerOptions = {
 export class CodeChecker<TypeNames extends string> {
   private _pathname: string;
   private _globalTypes = '';
+  private _globalPaths = new Set<string>(config.defaultGlobalPaths);
   private _types = new Map<string, string>();
   private _version: LibVersions = 'es2022';
   private code = '';
 
   constructor(options: CodeCheckerOptions = {}) {
-    const { pathname, globalTypes } = options;
-    this._pathname = pathname ?? '';
-    this._globalTypes = globalTypes ?? '';
+    const { pathname = '', globalTypes = '', globalPaths = [] } = options;
+
+    this._pathname = pathname;
+    this._globalTypes = globalTypes;
+    this._globalPaths = new Set([...globalPaths, ...config.defaultGlobalPaths]);
+
     this.init();
   }
 
@@ -130,55 +145,30 @@ export class CodeChecker<TypeNames extends string> {
     filename: string,
     code: string,
     lib: LibVersions
-  ): CompilationResult {
+  ): ts.Diagnostic[] {
     const options = ts.getDefaultCompilerOptions();
-    const realHost = ts.createCompilerHost(options, true);
 
     const sourceFile = ts.createSourceFile(
       filename,
       code,
       ts.ScriptTarget.Latest
     );
-    let outputCode: string | undefined = undefined;
 
-    const host: ts.CompilerHost = {
-      fileExists: filePath =>
-        filePath === filename || realHost.fileExists(filePath),
-      directoryExists: realHost.directoryExists?.bind(realHost),
-      getCurrentDirectory: realHost.getCurrentDirectory.bind(realHost),
-      getDirectories: realHost.getDirectories?.bind(realHost),
-      getCanonicalFileName: realHost.getCanonicalFileName.bind(realHost),
-      getNewLine: realHost.getNewLine.bind(realHost),
-      getDefaultLibFileName: realHost.getDefaultLibFileName.bind(realHost),
-      getSourceFile: (sourceFilename, ...args) => {
-        if (sourceFilename === filename) {
-          return sourceFile;
-        }
-        return realHost.getSourceFile(sourceFilename, ...args);
-      },
-      readFile: filePath => {
-        if (filePath === filename) {
-          return code;
-        }
-        realHost.readFile(filePath);
-      },
-      useCaseSensitiveFileNames: () => realHost.useCaseSensitiveFileNames(),
-      writeFile: (_fileName, data) => (outputCode = data)
-    };
+    const host = createVirtualHost(sourceFile);
 
     const rootName = require.resolve(`typescript/lib/lib.${lib}.d.ts`);
-    const globalPath = path.resolve(__dirname, 'global.d.ts');
+
     const program = ts.createProgram(
-      [rootName, filename, globalPath],
+      [rootName, filename, ...this.globalPaths],
       options,
       host
     );
+
     const emitResult = program.emit();
     const diagnostics = ts.getPreEmitDiagnostics(program);
-    return {
-      code: outputCode,
-      diagnostics: emitResult.diagnostics.concat(diagnostics)
-    };
+    config.verbose && logCodeBlock(sourceFile.getFullText());
+
+    return emitResult.diagnostics.concat(diagnostics);
   }
 
   private _test(testCode: string, typeName?: TypeNames) {
@@ -197,8 +187,8 @@ export class CodeChecker<TypeNames extends string> {
     const messages = this.compileTypeScriptCode(
       'temp.ts',
       `${globalTypes}${code}\n${testCode}`,
-      'es2022'
-    ).diagnostics.map(diagnostic => diagnostic.messageText);
+      this.version
+    ).map(diagnostic => diagnostic.messageText);
 
     return {
       valid: !messages.length,
@@ -225,6 +215,14 @@ export class CodeChecker<TypeNames extends string> {
 
   public set globalTypes(types: string) {
     this._globalTypes = types;
+  }
+
+  public get globalPaths() {
+    return [...this._globalPaths];
+  }
+
+  public set globalPaths(paths: string[]) {
+    this._globalPaths = new Set([...paths, ...config.defaultGlobalPaths]);
   }
 
   public get version() {
@@ -267,4 +265,77 @@ export class CodeChecker<TypeNames extends string> {
       }
     };
   }
+  public static get config() {
+    return {
+      setGlobalPaths: (paths: string[]) => {
+        config.defaultGlobalPaths = paths;
+      },
+      setVerbose: (verbose: boolean) => {
+        config.verbose = verbose;
+      },
+      get current() {
+        return { ...config };
+      }
+    };
+  }
+}
+
+/** Create typescript compiler host to interpret code 'in-memory' instead of writing file */
+function createVirtualHost(sourceFile: ts.SourceFile) {
+  const filename = 'temp.ts';
+  const options = ts.getDefaultCompilerOptions();
+  const realHost = ts.createCompilerHost(options, true);
+
+  const host: ts.CompilerHost = {
+    fileExists: filePath =>
+      filePath === filename || realHost.fileExists(filePath),
+    directoryExists: realHost.directoryExists?.bind(realHost),
+    getCurrentDirectory: realHost.getCurrentDirectory.bind(realHost),
+    getDirectories: realHost.getDirectories?.bind(realHost),
+    getCanonicalFileName: realHost.getCanonicalFileName.bind(realHost),
+    getNewLine: realHost.getNewLine.bind(realHost),
+    getDefaultLibFileName: realHost.getDefaultLibFileName.bind(realHost),
+    getSourceFile: (sourceFilename, ...args) => {
+      if (sourceFilename === filename) {
+        return sourceFile;
+      }
+      return realHost.getSourceFile(sourceFilename, ...args);
+    },
+    readFile: filePath => {
+      if (filePath === filename) {
+        return sourceFile.text;
+      }
+      realHost.readFile(filePath);
+    },
+    useCaseSensitiveFileNames: () => realHost.useCaseSensitiveFileNames(),
+    writeFile: (_fileName, _data) => {
+      /** Optionally do something with compiled code here */
+    }
+  };
+
+  return host;
+}
+
+function logCodeBlock(text: string) {
+  if (!text) {
+    return;
+  }
+  let longestLine = 0;
+
+  const formatted = text
+    .split('\n')
+    .map((line, index) => {
+      if (line.length > longestLine) {
+        longestLine = line.length;
+      }
+
+      return `${index + 1} │ ${line}`;
+    })
+    .join('\n');
+
+  const line = '─'.repeat(longestLine + 3);
+  const topLine = `┬${line}`.padStart(longestLine + 6, '─');
+  const bottomLine = `┴${line}`.padStart(longestLine + 6, '─');
+
+  console.info(`${topLine}\n${formatted}\n${bottomLine}`);
 }

@@ -9,6 +9,9 @@ type TypeNames =
   | 'EnumType'
   | 'ObjectType';
 
+CodeChecker.config.setGlobalPaths(['tests/global.d.ts']);
+// CodeChecker.config.setVerbose(true);
+
 describe('ts-assertions', () => {
   it('should instantiate a CodeChecker instance without a pathname', () => {
     const checker = new CodeChecker();
