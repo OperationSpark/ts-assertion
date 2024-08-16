@@ -1,24 +1,36 @@
 {
-  "name": "course.typescript",
+  "name": "ts-assertion",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "cross-env TS_NODE_PROJECT=tsconfig.json mocha",
-    "test:dev": "cross-env TS_NODE_PROJECT=tsconfig.json mocha --watch",
-    "dev": "ts-node tests/ts.ts"
+    "test": "mocha",
+    "test:dev": "mocha --watch",
+    "build": "tsup src/index.ts",
+    "prepublish": "npm test && npm run build",
+    "publish": "npm publish --access public"
   },
-  "keywords": [],
+  "keywords": [
+    "typescript",
+    "assertion",
+    "testing"
+  ],
   "author": "Operation Spark",
-  "license": "ISC",
-  "description": "Learn the basics of typescript",
+  "license": "MIT",
+  "description": "Assertion library for testing typescript validity",
+  "repository": {
+    "type": "git",
+    "url": "git+OperationSpark/typescript-assertion.git"
+  },
+  "dependencies": {
+    "typescript": "^5.5.4"
+  },
   "devDependencies": {
     "@types/chai": "^4.3.17",
     "@types/mocha": "^10.0.7",
     "@types/node": "^22.3.0",
     "chai": "^4.5.0",
-    "cross-env": "^7.0.3",
     "mocha": "^10.7.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "tsup": "^8.2.4"
   }
 }

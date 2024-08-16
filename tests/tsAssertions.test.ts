@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { expect } from 'chai';
-import { CodeChecker } from '../src/ts';
+import { CodeChecker } from '../src';
 
 type TypeNames =
   | 'StringType'

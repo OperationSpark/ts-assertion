@@ -62,8 +62,9 @@ type CodeCheckerOptions = {
 export class CodeChecker<TypeNames extends string> {
   private _pathname: string;
   private _globalTypes = '';
-  private code = '';
   private _types = new Map<string, string>();
+  private _version: LibVersions = 'es2022';
+  private code = '';
 
   constructor(options: CodeCheckerOptions = {}) {
     const { pathname, globalTypes } = options;
@@ -215,6 +216,14 @@ export class CodeChecker<TypeNames extends string> {
 
   public set globalTypes(types: string) {
     this._globalTypes = types;
+  }
+
+  public get version() {
+    return this._version;
+  }
+
+  public set version(version: LibVersions) {
+    this._version = version;
   }
 
   public restore(pathname?: string) {
