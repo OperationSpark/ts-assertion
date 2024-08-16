@@ -1,5 +1,5 @@
 {
-  "name": "ts-assertion",
+  "name": "@operationspark.org/ts-assertion",
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   "description": "Assertion library for testing typescript validity",
   "repository": {
     "type": "git",
-    "url": "git+OperationSpark/typescript-assertion.git"
+    "url": "https://github.com/OperationSpark/typescript-assertion.git"
   },
   "dependencies": {
     "typescript": "^5.5.4"

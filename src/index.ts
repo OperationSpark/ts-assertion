@@ -24,7 +24,16 @@ type CompilationResult = {
 };
 
 type CodeCheckerOptions = {
+  /** Pathname to input file */
   pathname?: string;
+  /**
+   * Global types to include
+   *
+   * @example
+   * ```ts
+   * type GLOBAL_ACCESS = TypeError;
+   * ```
+   */
   globalTypes?: string;
 };
 
