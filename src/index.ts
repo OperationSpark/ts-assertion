@@ -189,7 +189,7 @@ export class CodeChecker<TypeNames extends string> {
       `${globalTypes}${code}\n${testCode}`,
       this.version
     ).map(diagnostic =>
-      ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n', 2)
+      ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n', 4)
     );
 
     return {
