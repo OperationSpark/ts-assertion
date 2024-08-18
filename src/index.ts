@@ -188,7 +188,9 @@ export class CodeChecker<TypeNames extends string> {
       'temp.ts',
       `${globalTypes}${code}\n${testCode}`,
       this.version
-    ).map(diagnostic => diagnostic.messageText);
+    ).map(diagnostic =>
+      ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n\n', 2)
+    );
 
     return {
       valid: !messages.length,
