@@ -1,6 +1,6 @@
 {
   "name": "@operationspark.org/ts-assertion",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "dist/index.js",
   "scripts": {
     "test": "mocha",
