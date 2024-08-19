@@ -220,4 +220,42 @@ describe('ts-assertions', () => {
       });
     });
   });
+
+  describe('toJsString & toTypedString', () => {
+    const checker = new CodeChecker<TypeNames>({
+      pathname: 'tests/fixtures/fixtures3.ts'
+    });
+
+    it('should create a string version of an object', () => {
+      const obj = {
+        a: 'test',
+        b: 1,
+        c: true,
+        d: ['test'],
+        e: [1],
+        f: [true],
+        g: { a: 'test', b: 1 },
+        h: [{ a: 'test', b: 1 }],
+        i: (a: number, b: number) => a + b,
+        j: new Map<string, number>([
+          ['a', 1],
+          ['b', 2]
+        ]),
+        k: new Set<number>([1, 2, 3]),
+        l: new Date()
+      };
+
+      checker
+        .assert({ code: obj, name: 'obj', typeName: 'ComplexObject' })
+        .isValid();
+
+      checker
+        .assert({
+          code: { ...obj, m: 'invalid' },
+          name: 'obj',
+          typeName: 'ComplexObject'
+        })
+        .isNotValid();
+    });
+  });
 });
