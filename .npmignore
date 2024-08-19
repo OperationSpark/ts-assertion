@@ -1,0 +1,9 @@
+tests
+src
+.github
+.vscode
+node_modules
+tsconfig.json
+tsup.config.ts
+.mocharc.js
+README.md

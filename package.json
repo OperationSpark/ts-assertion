@@ -1,0 +1,35 @@
+{
+  "name": "@operationspark.org/ts-assertion",
+  "version": "1.0.8",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "mocha",
+    "test:dev": "mocha --watch",
+    "build": "tsup src/index.ts",
+    "publish:npm": "npm test && npm run build && npm publish --access public"
+  },
+  "keywords": [
+    "typescript",
+    "assertion",
+    "testing"
+  ],
+  "author": "Operation Spark",
+  "license": "MIT",
+  "description": "Assertion library for testing typescript validity",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OperationSpark/ts-assertion.git"
+  },
+  "dependencies": {
+    "typescript": "^5.5.4"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.17",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^22.3.0",
+    "chai": "^4.5.0",
+    "mocha": "^10.7.3",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.2.4"
+  }
+}
